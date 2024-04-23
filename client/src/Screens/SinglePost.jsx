@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal, Button, Form } from 'react-bootstrap';
+import { Link } from 'react-router-dom'; 
 
 const SinglePost = ({ match }) => {
-  const [post, setPost] = useState(null);
+  const [posts, setPosts] = useState([]);
  // const postId = match.params.postId;
  const postId = 5;
  const [showModal, setShowModal] = useState(false);
@@ -13,23 +14,23 @@ const SinglePost = ({ match }) => {
    author: '',
    publicationDate: '',
    category: '',
-   tags: [],
+//    tags: [],
    content: '',
    imageUrl: '',
    videoUrl: ''
  });
-  useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const response = await axios.get(`/api/posts/${postId}`);
-        setPost(response.data);
-      } catch (error) {
-        console.error('Error fetching post:', error);
-      }
-    };
+ useEffect(() => {
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/posts');
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
 
-    fetchPost();
-  }, [postId]);
+  fetchPosts();
+}, []);
   const handleShowModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
 
@@ -41,32 +42,47 @@ const SinglePost = ({ match }) => {
     }));
   };
   const handleSubmit = async () => {
+
     try {
-      // Add code to send form data to server using axios or fetch
-      console.log('Form data:', formData);
-      handleCloseModal();
+        const response = await axios.post('http://localhost:5000/api/posts', formData);
+        console.log('Post created successfully:', response.data);
+        handleCloseModal();
     } catch (error) {
       console.error('Error submitting form:', error);
     }
   };
-  if (!post) {
+  if (!posts) {
     return <div>Loading...</div>;
   }
 
-  const { title, author, publicationDate, category, tags, content, imageUrl, videoUrl } = post;
-  const tagsString = tags ? tags.join(', ') : '';
+  const { title, author, publicationDate, category, content, imageUrl, videoUrl } = posts;
+//   const tagsString = tags ? tags.join(', ') : '';
 
   return (
     <div className="single-post">
-      <h2>{title}</h2>
+      {/* <h2>{title}</h2>
       <p>Author: {author}</p>
       <p>Publication Date: {publicationDate}</p>
       <p>Category: {category}</p>
-      {tags && <p>Tags: {tagsString}</p>}
+      {/* {tags && <p>Tags: {tagsString}</p>} */}
       {/* <p>Tags: {tags.join(', ')}</p> */}
-      <div dangerouslySetInnerHTML={{ __html: content }} />
+      {/* <div dangerouslySetInnerHTML={{ __html: content }} />
       {imageUrl && <img src={imageUrl} alt="Post Image" />}
-      {videoUrl && <video src={videoUrl} controls />}
+      {videoUrl && <video src={videoUrl} controls />} */} 
+      <div className="post-list">
+      <h2>Posts</h2>
+      <ul>
+        {posts.map(post => (
+          <li key={post._id}>
+            <Link to={`/posts/${post._id}`}>{post.title}</Link>
+            <p>Author: {post.author}</p>
+            <p>Publication Date: {post.publicationDate}</p>
+            <p>Category: {post.category}</p>
+            {/* Add more details as needed */}
+          </li>
+        ))}
+      </ul>
+    </div>
       <Button variant="primary" onClick={handleShowModal}>Add Post</Button>
       
       <Modal show={showModal} onHide={handleCloseModal}>
@@ -74,7 +90,6 @@ const SinglePost = ({ match }) => {
           <Modal.Title>Add Post</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* Form fields */}
           <Form>
             <Form.Group controlId="title">
             <Form.Label>Title</Form.Label>
@@ -96,10 +111,10 @@ const SinglePost = ({ match }) => {
             <Form.Control type="text" name="category" value={formData.category} onChange={handleChange} />
             </Form.Group>
 
-            <Form.Group controlId="tags">
+            {/* <Form.Group controlId="tags">
             <Form.Label>Tags (comma-separated)</Form.Label>
             <Form.Control type="text" name="tags" value={formData.tags.join(',')} onChange={handleChange} />
-            </Form.Group>
+            </Form.Group> */}
 
             <Form.Group controlId="content">
             <Form.Label>Content</Form.Label>
